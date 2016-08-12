@@ -12,5 +12,7 @@
   :components ((:module "src"
                 :pathname "src"
                 :components ((:file "package")
-                             (:file "twitter-api" :depends-on ("package")))))
+                             (:file "url" :depends-on ("package"))
+                             (:file "twitter-api" :depends-on ("package" "url"))
+                             (:file "message" :depends-on ("package")))))
   :in-order-to ((test-op (test-op #:cl-async-twitter-test))))

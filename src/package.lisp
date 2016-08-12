@@ -9,7 +9,8 @@
         #:blackbird
         #:babel
         #:cl-json)
-  (:export #:*resource-base-url*
+  (:export ;; url
+           #:*resource-base-url*
            #:*request-token-url*
            #:*authenticate-url*
            #:*access-token-url*
@@ -19,15 +20,29 @@
            #:*statuses-user-timeline-url*
            #:*statuses-update-url*
            #:*users-lookup-url*
+
+           ;; twitter-api
            #:make-twitter-session
            #:login
            #:cli-oob-verifier-cb
            #:resp-error
-           #:access-json
            #:start-streaming
            #:call-with-retries
            #:friendships-create
            #:direct-messages-new
            #:user-blocking-p
            #:statuses-update
-           #:users-lookup))
+           #:users-lookup
+           
+           ;; message
+           #:access-json
+           #:user-status-p
+           #:status-rt-text-p
+           #:status-rt-p
+           #:user-mentioned-p
+           #:dm-to-user-p
+           #:filter-user-mention
+           #:build-status-text
+           #:trim-twitter-text
+           #:trim-spaced-text
+           ))
