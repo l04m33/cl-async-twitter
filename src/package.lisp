@@ -22,6 +22,10 @@
            #:*users-lookup-url*
 
            ;; twitter-api
+           #:api-error
+           #:api-error-name
+           #:api-error-url
+           #:api-error-msg
            #:make-twitter-session
            #:login
            #:cli-oob-verifier-cb

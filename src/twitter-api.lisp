@@ -1,6 +1,29 @@
 (in-package #:cl-async-twitter)
 
 
+(define-condition api-error (error)
+  ((name :initarg :name :reader api-error-name)
+   (url :initarg :url :reader api-error-url)
+   (status :initarg :status :reader api-error-status)
+   (msg :initarg :url :reader api-error-msg))
+  (:report (lambda (c s)
+             (print-unreadable-object (c s :type t :identity t)
+               (format s "~a: ~a: ~a"
+                       (api-error-name c)
+                       (api-error-status c)
+                       (api-error-msg c)))))
+  (:documentation "Indicates an error returned by the Twitter APIs."))
+
+
+(defun api-error-from-resp (name url resp)
+  (make-condition
+    'api-error
+    :name name
+    :url url
+    :status (nth 0 resp)
+    :msg (nth 1 resp)))
+
+
 (defun catched-call (func &rest args)
   (catcher (apply func args)
            (t (e)
@@ -34,7 +57,7 @@
                  request-token-cb
                  :method :post)))
     (when (resp-error resp)
-      (error (format nil "request-token failed: ~s" (nth 1 resp))))
+      (error (api-error-from-resp "login" *request-token-url* resp)))
 
     (alet* ((verifier (funcall verifier-cb))
             (resp (access-token
@@ -43,7 +66,7 @@
                     verifier
                     :method :post)))
       (when (resp-error resp)
-        (error (format nil "access-token failed: ~s" (nth 1 resp))))
+        (error (api-error-from-resp "login" *access-token-url* resp)))
       (let ((resp-body (nth 1 resp)))
         (list (parse-integer (cdr (assoc "user_id" resp-body :test #'equal)))
               (cdr (assoc "screen_name" resp-body :test #'equal)))))))
@@ -100,7 +123,7 @@
                  :method :get
                  :body-cb (make-streaming-body-parser message-cb))))
     (when (resp-error resp)
-      (error (format nil "streaming-request failed: ~s" (nth 1 resp))))
+      (error (api-error-from-resp "start-streaming" *user-stream-url* resp)))
     t))
 
 
@@ -134,7 +157,10 @@
       ((= (nth 0 resp) 403)
        t)
       (t
-       (error (format nil "request failed: ~s" (nth 1 resp)))))))
+       (error (api-error-from-resp
+                "friendships-create"
+                *friendships-create-url*
+                resp))))))
 
 
 (defun direct-messages-new (session target-id text)
@@ -144,7 +170,10 @@
                  :params `(("user_id" . ,target-id)
                            ("text" . ,text)))))
     (when (resp-error resp)
-      (error (format nil "request failed: ~s" (nth 1 resp))))
+      (error (api-error-from-resp
+               "direct-messages-new"
+               *direct-messages-new-url*
+               resp)))
     t))
 
 
@@ -162,7 +191,10 @@
       ((= (nth 0 resp) 401)
        t)
       (t
-       (error (format nil "request failed: ~s" (nth 1 resp)))))))
+       (error (api-error-from-resp
+                "user-blocking-p"
+                *statuses-user-timeline-url*
+                resp))))))
 
 
 (defun statuses-update (session status-text &optional in-reply-to)
@@ -175,7 +207,10 @@
                   :method :post
                   :params params)))
     (when (resp-error resp)
-      (error (format nil "request failed: ~s" (nth 1 resp))))
+      (error (api-error-from-resp
+               "statuses-update"
+               *statuses-update-url*
+               resp)))
     t))
 
 
@@ -186,5 +221,5 @@
                   :method :post
                   :params `(("user_id" . ,user-ids-str)))))
     (when (resp-error resp)
-      (error (format nil "request failed: ~s" (nth 1 resp))))
+      (error (api-error-from-resp "users-lookup" *users-lookup-url* resp)))
     (nth 1 resp)))
