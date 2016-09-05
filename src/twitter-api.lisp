@@ -31,9 +31,12 @@
               nil)))
 
 
-(defun make-twitter-session (consumer-key consumer-secret)
+(defun make-twitter-session (consumer-key consumer-secret
+                             &optional access-token access-token-secret)
   (make-session :consumer-key consumer-key
                 :consumer-secret consumer-secret
+                :token access-token
+                :token-secret access-token-secret
                 :resource-base-url *resource-base-url*))
 
 
